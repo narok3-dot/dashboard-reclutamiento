@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Reclutamiento — REMAX Central</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f9f8f6;
+    --surface: #ffffff;
+    --surface2: #f2f1ef;
+    --text: #1a1a1a;
+    --text2: #6b6b6b;
+    --text3: #9a9a9a;
+    --border: #e4e2de;
+    --blue: #185FA5;
+    --green: #0F6E56;
+    --amber: #BA7517;
+    --red: #A32D2D;
+    --purple: #534AB7;
+    --coral: #993C1D;
+    --gray: #5F5E5A;
+    --green-light: #EAF3DE;
+    --green-dark: #3B6D11;
+    --amber-light: #FAEEDA;
+    --amber-dark: #854F0B;
+    --red-light: #FCEBEB;
+    --red-dark: #A32D2D;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 28px; height: 28px; background: #CC0000; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+  .logo svg { width: 18px; height: 18px; fill: white; }
+  .header h1 { font-size: 15px; font-weight: 600; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text3); }
+  .main { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+  .section { margin-bottom: 28px; }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text3);
+    margin-bottom: 12px;
+  }
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .metric-value { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1.1; }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .metric-sub.up { color: var(--green-dark); }
+  .metric-sub.down { color: var(--red-dark); }
+  .meta-bar-wrap { height: 3px; background: var(--surface2); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .meta-bar-fill { height: 100%; border-radius: 2px; }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .chart-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .toggle-group {
+    display: flex;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+    gap: 2px;
+  }
+  .toggle-btn {
+    padding: 4px 12px;
+    border-radius: 5px;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text2);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .toggle-btn.active {
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    font-size: 12px; color: var(--text2);
+    margin-bottom: 12px;
+  }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .chart-wrap { position: relative; width: 100%; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  .funnel-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .funnel-label { font-size: 12px; color: var(--text2); width: 110px; flex-shrink: 0; }
+  .funnel-bar-outer { flex: 1; background: var(--surface2); border-radius: 4px; height: 26px; overflow: hidden; }
+  .funnel-bar-inner { height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 600; color: white; transition: width 0.4s ease; white-space: nowrap; }
+  .funnel-pct { font-size: 11px; color: var(--text3); width: 32px; text-align: right; }
+  .funnel-stats { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .funnel-stat { font-size: 12px; color: var(--text2); }
+  .funnel-stat strong { color: var(--text); }
+
+  .source-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 14px; }
+  .source-table th { text-align: left; padding: 6px 10px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+  .source-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  .source-table tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: var(--green-light); color: var(--green-dark); }
+  .badge-amber { background: var(--amber-light); color: var(--amber-dark); }
+  .badge-red { background: var(--red-light); color: var(--red-dark); }
+  .src-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    border-left: 3px solid var(--border);
+  }
+  .insight-card.green { border-left-color: var(--green); }
+  .insight-card.amber { border-left-color: var(--amber); }
+  .insight-card.red { border-left-color: var(--red); }
+  .insight-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .insight-text { font-size: 12px; color: var(--text2); line-height: 1.55; }
+  .footer { text-align: center; font-size: 11px; color: var(--text3); padding: 20px; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div>
+      <h1>Dashboard Reclutamiento</h1>
+      <div class="header-sub">REMAX Central · 2025–2026</div>
+    </div>
+  </div>
+  <div style="font-size:11px; color:var(--text3);">Meta mensual: <strong style="color:var(--text)">8 agentes</strong></div>
+</header>
+
+<main class="main">
+
+  <!-- KPIs -->
+  <div class="section">
+    <div class="section-label">resumen general</div>
+    <div class="metric-grid" id="kpi-grid"></div>
+  </div>
+
+  <!-- Ingresos mensuales -->
+  <div class="section">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Ingresos mensuales vs meta (8 agentes)</div>
+        <div class="toggle-group" id="toggle-chart1">
+          <button class="toggle-btn active" onclick="setChart1(2025,this)">2025</button>
+          <button class="toggle-btn" onclick="setChart1(2026,this)">2026</button>
+          <button class="toggle-btn" onclick="setChart1('ambos',this)">Comparar</button>
+        </div>
+      </div>
+      <div class="legend" id="legend-chart1"></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart1" role="img" aria-label="Ingresos mensuales de agentes vs meta de 8"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Funnel + Fuentes -->
+  <div class="two-col section">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Funnel de conversión</div>
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="setFunnel(2025,this)">2025</button>
+          <button class="toggle-btn" onclick="setFunnel(2026,this)">2026</button>
+        </div>
+      </div>
+      <div id="funnel-content"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Agentes ingresados por fuente</div>
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="setSource(2025,this)">2025</button>
+          <button class="toggle-btn" onclick="setSource(2026,this)">2026</button>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart2" role="img" aria-label="Ingresos por fuente"></canvas></div>
+      <table class="source-table" id="source-table"></table>
+    </div>
+  </div>
+
+  <!-- Visitas por portal -->
+  <div class="section">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Visitas por portal — volumen top del funnel</div>
+      </div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:var(--blue)"></span>2025</span>
+        <span><span class="legend-dot" style="background:var(--green)"></span>2026</span>
+      </div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart3" role="img" aria-label="Visitas mensuales 2025 vs 2026"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Conclusiones -->
+  <div class="section">
+    <div class="section-label">conclusiones y decisiones de presupuesto</div>
+    <div class="insight-grid">
+      <div class="insight-card green">
+        <div class="insight-title">Referidos y Ex REMAX — máxima eficiencia</div>
+        <div class="insight-text">Conversión de 40–100%. Aunque traen poco volumen, casi todos ingresan. Invertir en programas de referidos tiene el mejor retorno del funnel.</div>
+      </div>
+      <div class="insight-card green">
+        <div class="insight-title">Marca propia — conversión alta en 2025</div>
+        <div class="insight-text">80% de conversión en 2025. Personas que llegan por la marca ya vienen convencidas. Vale potenciar visibilidad de marca empleadora.</div>
+      </div>
+      <div class="insight-card amber">
+        <div class="insight-title">Laborum — mayor volumen, menor conversión</div>
+        <div class="insight-text">Trae más del 70% de los postulantes pero menos del 25% de los ingresos. Evaluar si el costo por agente ingresado justifica la inversión anual de $5–7M.</div>
+      </div>
+      <div class="insight-card amber">
+        <div class="insight-title">RRSS 2026 — caída fuerte en conversión</div>
+        <div class="insight-text">De 1.9% en 2025 a 0.21% en 2026, pese a mayor inversión. Revisar segmentación, creativos y público objetivo antes de seguir aumentando presupuesto.</div>
+      </div>
+      <div class="insight-card red">
+        <div class="insight-title">Cuello de botella: perfil → 1ª entrevista</div>
+        <div class="insight-text">La mayor caída del funnel ocurre entre perfilados y primera entrevista. Automatizar agendamiento o reducir fricción en ese paso puede mejorar los ingresos sin más inversión.</div>
+      </div>
+      <div class="insight-card red">
+        <div class="insight-title">Meta mensual: ningún mes la supera regularmente</div>
+        <div class="insight-text">Solo octubre 2025 superó los 8 agentes (10). El promedio anual está en ~5. Se requiere ajuste de estrategia o revisión de la meta.</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="footer">REMAX Central · Dashboard Reclutamiento · Datos 2025–2026</div>
+
+<script>
+const M25 = [
+  {mes:"Ene",V:5976,P:432,Pf:119,PE:39,SE:5,I:5},
+  {mes:"Feb",V:4974,P:398,Pf:118,PE:23,SE:10,I:8},
+  {mes:"Mar",V:6378,P:806,Pf:198,PE:45,SE:8,I:8},
+  {mes:"Abr",V:6721,P:696,Pf:151,PE:38,SE:13,I:10},
+  {mes:"May",V:5352,P:640,Pf:145,PE:36,SE:3,I:3},
+  {mes:"Jun",V:8388,P:534,Pf:76,PE:27,SE:9,I:4},
+  {mes:"Jul",V:4806,P:486,Pf:79,PE:34,SE:22,I:5},
+  {mes:"Ago",V:12096,P:462,Pf:83,PE:36,SE:8,I:1},
+  {mes:"Sep",V:6377,P:203,Pf:85,PE:39,SE:6,I:2},
+  {mes:"Oct",V:7334,P:273,Pf:94,PE:44,SE:10,I:8},
+  {mes:"Nov",V:8266,P:382,Pf:215,PE:54,SE:9,I:3},
+  {mes:"Dic",V:5223,P:430,Pf:262,PE:58,SE:4,I:2},
+];
+const M26 = [
+  {mes:"Ene",V:5794,P:443,Pf:291,PE:47,SE:7,I:5},
+  {mes:"Feb",V:8516,P:403,Pf:250,PE:34,SE:10,I:7},
+  {mes:"Mar",V:11752,P:800,Pf:499,PE:37,SE:10,I:8},
+  {mes:"Abr",V:10238,P:1019,Pf:765,PE:76,SE:12,I:6},
+  {mes:"May",V:9142,P:875,Pf:713,PE:70,SE:2,I:4},
+  {mes:"Jun",V:4514,P:417,Pf:336,PE:25,SE:5,I:6},
+];
+const F25 = {Laborum:{P:4253,I:14,conv:0.33},Trabajando:{P:401,I:4,conv:1.0},RRSS:{P:1051,I:20,conv:1.9},Referidos:{P:28,I:11,conv:39.29},Marca:{P:5,I:4,conv:80.0},ExRemax:{P:4,I:4,conv:100.0}};
+const F26 = {Laborum:{P:1382,I:7,conv:0.51},Trabajando:{P:165,I:2,conv:1.21},RRSS:{P:2365,I:5,conv:0.21},Referidos:{P:20,I:8,conv:40.0},Marca:{P:19,I:4,conv:21.05},ExRemax:{P:6,I:3,conv:50.0}};
+const SRC_COLORS = {Laborum:'#185FA5',Trabajando:'#0F6E56',RRSS:'#BA7517',Referidos:'#534AB7',Marca:'#993C1D',ExRemax:'#5F5E5A'};
+const META = 8;
+
+// KPIs
+function buildKPIs() {
+  const tot25 = M25.reduce((a,d)=>a+d.I,0);
+  const tot26 = M26.reduce((a,d)=>a+d.I,0);
+  const avg25 = (tot25/12).toFixed(1);
+  const avg26 = (tot26/M26.length).toFixed(1);
+  const best25 = Math.max(...M25.map(d=>d.I));
+  const best26 = Math.max(...M26.map(d=>d.I));
+  const conv25 = (tot25/M25.reduce((a,d)=>a+d.P,0)*100).toFixed(2);
+  const conv26 = (tot26/M26.reduce((a,d)=>a+d.P,0)*100).toFixed(2);
+  const pctMeta = Math.round(tot26/(META*M26.length)*100);
+  const up26 = parseFloat(avg26) >= parseFloat(avg25);
+
+  const cards = [
+    {label:'Ingresos 2025',val:tot25,sub:'total anual (12 meses)',pct:null},
+    {label:'Ingresos 2026',val:tot26,sub:`${M26.length} meses · ${pctMeta}% de meta acumulada`,pct:pctMeta},
+    {label:'Promedio mensual',val:avg26,sub:`2025: ${avg25} · meta: ${META}`,up:up26},
+    {label:'Mejor mes 2025',val:best25,sub:'octubre 2025',pct:null},
+    {label:'Mejor mes 2026',val:best26,sub:'marzo 2026',pct:null},
+    {label:'Conv. postulante→ingreso',val:`${conv26}%`,sub:`2025: ${conv25}%`,pct:null},
+  ];
+  document.getElementById('kpi-grid').innerHTML = cards.map(c=>`
+    <div class="metric-card">
+      <div class="metric-label">${c.label}</div>
+      <div class="metric-value">${c.val}</div>
+      <div class="metric-sub ${c.up===true?'up':c.up===false?'down':''}">${c.sub}</div>
+      ${c.pct!==null?`<div class="meta-bar-wrap"><div class="meta-bar-fill" style="width:${Math.min(c.pct,100)}%;background:${c.pct>=100?'#3B6D11':c.pct>=60?'#BA7517':'#A32D2D'}"></div></div>`:''}
+    </div>`).join('');
+}
+
+// Chart 1 — ingresos
+let c1;
+function buildChart1(year) {
+  if (c1) c1.destroy();
+  const leg = document.getElementById('legend-chart1');
+  let labels, datasets;
+  if (year===2025) {
+    labels = M25.map(d=>d.mes);
+    datasets = [
+      {label:'Ingresos 2025',data:M25.map(d=>d.I),borderColor:'#185FA5',backgroundColor:'rgba(24,95,165,0.08)',fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#185FA5'},
+      {label:'Meta',data:Array(12).fill(META),borderColor:'#E24B4A',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,type:'line'},
+    ];
+    leg.innerHTML = `<span><span class="legend-dot" style="background:#185FA5"></span>Ingresos 2025</span><span><span class="legend-dot" style="background:#E24B4A"></span>Meta (8)</span>`;
+  } else if (year===2026) {
+    labels = M26.map(d=>d.mes);
+    datasets = [
+      {label:'Ingresos 2026',data:M26.map(d=>d.I),borderColor:'#0F6E56',backgroundColor:'rgba(15,110,86,0.08)',fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#0F6E56'},
+      {label:'Meta',data:Array(M26.length).fill(META),borderColor:'#E24B4A',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,type:'line'},
+    ];
+    leg.innerHTML = `<span><span class="legend-dot" style="background:#0F6E56"></span>Ingresos 2026</span><span><span class="legend-dot" style="background:#E24B4A"></span>Meta (8)</span>`;
+  } else {
+    labels = M25.map(d=>d.mes);
+    datasets = [
+      {label:'2025',data:M25.map(d=>d.I),borderColor:'#185FA5',backgroundColor:'transparent',tension:0.35,pointRadius:3,pointBackgroundColor:'#185FA5'},
+      {label:'2026',data:[...M26.map(d=>d.I),...Array(12-M26.length).fill(null)],borderColor:'#0F6E56',backgroundColor:'transparent',tension:0.35,pointRadius:3,pointBackgroundColor:'#0F6E56',borderDash:[4,3]},
+      {label:'Meta',data:Array(12).fill(META),borderColor:'#E24B4A',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+    ];
+    leg.innerHTML = `<span><span class="legend-dot" style="background:#185FA5"></span>2025</span><span><span class="legend-dot" style="background:#0F6E56"></span>2026</span><span><span class="legend-dot" style="background:#E24B4A"></span>Meta (8)</span>`;
+  }
+  c1 = new Chart(document.getElementById('chart1'),{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:2,font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+}
+function setChart1(y,el){el.closest('.toggle-group').querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');buildChart1(y);}
+
+// Funnel
+function buildFunnel(year) {
+  const data = year===2025?M25:M26;
+  const totV=data.reduce((a,d)=>a+d.V,0);
+  const totP=data.reduce((a,d)=>a+d.P,0);
+  const totPf=data.reduce((a,d)=>a+d.Pf,0);
+  const totPE=data.reduce((a,d)=>a+d.PE,0);
+  const totSE=data.reduce((a,d)=>a+d.SE,0);
+  const totI=data.reduce((a,d)=>a+d.I,0);
+  const steps=[
+    {label:'Visitas',val:totV,color:'#185FA5'},
+    {label:'Postulantes',val:totP,color:'#1D9E75'},
+    {label:'Perfiliados',val:totPf,color:'#BA7517'},
+    {label:'1ª Entrevista',val:totPE,color:'#534AB7'},
+    {label:'2ª Entrevista',val:totSE,color:'#993C1D'},
+    {label:'Ingresos',val:totI,color:'#3B6D11'},
+  ];
+  const max=totV;
+  document.getElementById('funnel-content').innerHTML=steps.map((s,i)=>{
+    const pct=Math.round(s.val/max*100);
+    return `<div class="funnel-row">
+      <div class="funnel-label">${s.label}</div>
+      <div class="funnel-bar-outer"><div class="funnel-bar-inner" style="width:${pct}%;background:${s.color}">${s.val.toLocaleString('es-CL')}</div></div>
+      <div class="funnel-pct">${pct}%</div>
+    </div>`;
+  }).join('')+`<div class="funnel-stats">
+    <div class="funnel-stat">Post→Ingreso: <strong>${(totI/totP*100).toFixed(2)}%</strong></div>
+    <div class="funnel-stat">Post→Perfil: <strong>${(totPf/totP*100).toFixed(1)}%</strong></div>
+    <div class="funnel-stat">Perfil→1ª Ent: <strong>${(totPE/totPf*100).toFixed(1)}%</strong></div>
+    <div class="funnel-stat">2ª Ent→Ingreso: <strong>${(totI/totSE*100).toFixed(1)}%</strong></div>
+  </div>`;
+}
+function setFunnel(y,el){el.closest('.toggle-group').querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');buildFunnel(y);}
+
+// Source chart
+let c2;
+function buildSource(year) {
+  if(c2) c2.destroy();
+  const data=year===2025?F25:F26;
+  const sources=Object.keys(data);
+  const colors=sources.map(s=>SRC_COLORS[s]);
+  c2=new Chart(document.getElementById('chart2'),{type:'bar',data:{labels:sources,datasets:[{label:'Ingresos',data:sources.map(s=>data[s].I),backgroundColor:colors,borderRadius:4,barPercentage:0.6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:10},stepSize:2},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}});
+  const getBadge=(conv)=>{
+    if(conv>=20) return `<span class="badge badge-green">${conv}%</span>`;
+    if(conv>=1) return `<span class="badge badge-amber">${conv}%</span>`;
+    return `<span class="badge badge-red">${conv}%</span>`;
+  };
+  document.getElementById('source-table').innerHTML=`<tr><th>Fuente</th><th>Post.</th><th>Ingresos</th><th>Conv.</th></tr>`+sources.map(s=>`<tr><td><span class="src-dot" style="background:${SRC_COLORS[s]}"></span>${s}</td><td>${data[s].P.toLocaleString('es-CL')}</td><td>${data[s].I}</td><td>${getBadge(data[s].conv)}</td></tr>`).join('');
+}
+function setSource(y,el){el.closest('.toggle-group').querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');buildSource(y);}
+
+// Visitas chart
+let c3;
+function buildVisitas() {
+  const labels=M25.map(d=>d.mes);
+  c3=new Chart(document.getElementById('chart3'),{type:'bar',data:{labels,datasets:[{label:'2025',data:M25.map(d=>d.V),backgroundColor:'#185FA5',borderRadius:3,barPercentage:0.4},{label:'2026',data:[...M26.map(d=>d.V),...Array(12-M26.length).fill(null)],backgroundColor:'#0F6E56',borderRadius:3,barPercentage:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11},callback:(v)=>v>=1000?`${Math.round(v/1000)}k`:v},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+}
+
+buildKPIs();
+buildChart1(2025);
+buildFunnel(2025);
+buildSource(2025);
+buildVisitas();
+</script>
+</body>
+</html>
