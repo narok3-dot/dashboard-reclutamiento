@@ -252,7 +252,7 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
   <div class="grid-13">
     <div class="panel">
       <h3>Ingresos por fuente, 2026</h3>
-      <p class="ph" id="ph-fuente26">52 agentes</p>
+      <p class="ph" id="ph-fuente26">&nbsp;</p>
       <div class="chart" id="c-fuente26"></div>
     </div>
     <div class="panel">
@@ -327,7 +327,7 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
 
 <section id="lista">
   <p class="eyebrow">Detalle</p>
-  <h2 id="h-lista">Los 52 ingresos de 2026</h2>
+  <h2 id="h-lista">Ingresos de 2026</h2>
   <p class="lede">Lista nominal por mes tal como está cargada en el Sheet. Filtra por fuente.</p>
   <div class="panel">
     <div class="filters" id="f-fuente"></div>
@@ -1784,7 +1784,8 @@ Y.forEach(function(y){
   for(var s in A[y].funnel){ A[y].funnel[s].forEach(function(v,i){ t[i]+=v; }); }
   tot[y]=t;
 });
-var ING = {2024:89,2025:57,2026:52};
+var ING = {};
+Y.forEach(function(y){ ING[y] = A[y].ingresos; });
 var MESES26 = (A['2026'].meses || 9);
 var prom26 = ING[2026]/MESES26;
 var proy26 = Math.round(ING[2026] + prom26*3);
@@ -1793,11 +1794,11 @@ var proy26 = Math.round(ING[2026] + prom26*3);
 (function(){
   var k = [
     {k:'Ingresos 2026',v:fmt(ING[2026]),n:'enero a '+MS[Math.max(0,MESES26-1)].toLowerCase(),hero:true},
-    {k:'Promedio mensual',v:dec(prom26),n:'2025 cerró en '+dec(57/12)+' · 2024 en '+dec(89/12)},
-    {k:'Proyección 2026',v:'≈ '+fmt(proy26),n:'si el ritmo se mantiene · <span class="up">+'+Math.round((proy26/57-1)*100)+'% vs 2025</span>'},
-    {k:'Visitas a avisos',v:fmt(tot['2026'][0]),n:'todas las fuentes, 36 semanas'},
+    {k:'Promedio mensual',v:dec(prom26),n:'2025 cerró en '+dec(ING[2025]/12)+' · 2024 en '+dec(ING[2024]/12)},
+    {k:'Proyección 2026',v:'≈ '+fmt(proy26),n:'si el ritmo se mantiene · <span class="up">+'+Math.round((proy26/ING[2025]-1)*100)+'% vs 2025</span>'},
+    {k:'Visitas a avisos',v:fmt(tot['2026'][0]),n:'todas las fuentes, '+D.semanas26.length+' semanas'},
     {k:'Primeras entrevistas',v:fmt(tot['2026'][3]),n:dec(tot['2026'][3]/MESES26,0)+' por mes en promedio'},
-    {k:'Entrevista → ingreso',v:pct(ING[2026],tot['2026'][3]),n:'2025: '+pct(57,tot['2025'][3])+' · 2024: '+pct(89,tot['2024'][3])}
+    {k:'Entrevista → ingreso',v:pct(ING[2026],tot['2026'][3]),n:'2025: '+pct(ING[2025],tot['2025'][3])+' · 2024: '+pct(ING[2024],tot['2024'][3])}
   ];
   document.getElementById('kpis').innerHTML = k.map(function(x){
     return '<div class="kpi'+(x.hero?' hero':'')+'"><p class="k">'+x.k+'</p><div class="v">'+x.v+'</div><div class="n">'+x.n+'</div></div>';
@@ -1806,8 +1807,8 @@ var proy26 = Math.round(ING[2026] + prom26*3);
   var pagados = (A['2026'].fuentes.Laborum||0)+(A['2026'].fuentes.Trabajando||0);
   var vPag = A['2026'].funnel.Laborum[0]+A['2026'].funnel.Trabajando[0];
   document.getElementById('callout').innerHTML =
-    '<b>El dato que manda el año:</b> referidos y marca aportaron '+(refRef+refMarca)+' de los 52 ingresos ('+
-    Math.round((refRef+refMarca)/52*100)+'%) con apenas '+fmt(A['2026'].funnel.Referidos[0]+A['2026'].funnel.Marca[0]+A['2026'].funnel['Ex REMAX'][0])+
+    '<b>El dato que manda el año:</b> referidos y marca aportaron '+(refRef+refMarca)+' de los '+ING[2026]+' ingresos ('+
+    Math.round((refRef+refMarca)/ING[2026]*100)+'%) con apenas '+fmt(A['2026'].funnel.Referidos[0]+A['2026'].funnel.Marca[0]+A['2026'].funnel['Ex REMAX'][0])+
     ' visitas. Laborum y Trabajando, con '+fmt(vPag)+' visitas entre los dos, aportaron '+pagados+'.';
 })();
 
@@ -2175,7 +2176,7 @@ function stack100(hostId, opts){
   var rows=SRC_ORDER.filter(function(s){return f[s];}).map(function(s){return {n:SRC_LABEL[s],v:f[s]};})
     .sort(function(a,b){return b.v-a.v;});
   var seq=['--seq-6','--seq-5','--seq-4','--seq-3','--seq-2','--seq-1'];
-  rows.forEach(function(r,i){ r.c=seq[Math.min(i,seq.length-1)]; r.sub=Math.round(r.v/52*100)+'%'; });
+  rows.forEach(function(r,i){ r.c=seq[Math.min(i,seq.length-1)]; r.sub=Math.round(r.v/ING[2026]*100)+'%'; });
   hBar('c-fuente26',{rows:rows, rowH:38, aria:'Ingresos por fuente en 2026'});
 })();
 
@@ -2217,11 +2218,13 @@ function stack100(hostId, opts){
       return '<tr><td>'+r.n+'</td><td>'+fmt(r.f[0])+'</td><td>'+fmt(r.f[1])+'</td><td>'+fmt(r.f[3])+'</td><td>'+r.ing+'</td>'+
         '<td'+(r.eff===best?' class="best"':'')+'>'+(r.eff==null?'—':dec(r.eff))+'</td></tr>';
     }).join('')+
-    '</tbody><tfoot><tr><td>Total</td><td>'+fmt(tot['2026'][0])+'</td><td>'+fmt(tot['2026'][1])+'</td><td>'+fmt(tot['2026'][3])+'</td><td>52</td><td>'+
-      dec(52/tot['2026'][3]*100)+'</td></tr></tfoot>';
+    '</tbody><tfoot><tr><td>Total</td><td>'+fmt(tot['2026'][0])+'</td><td>'+fmt(tot['2026'][1])+'</td><td>'+fmt(tot['2026'][3])+'</td><td>'+ING[2026]+'</td><td>'+
+      dec(ING[2026]/tot['2026'][3]*100)+'</td></tr></tfoot>';
   var note=document.createElement('p');
   note.className='autonota'; note.style.cssText='font-size:11.5px;color:var(--muted);margin:12px 0 0;line-height:1.55';
-  note.innerHTML='El total de ingresos incluye 1 de Team, que no tiene embudo propio cargado. Por eso las filas suman 51 y el total marca 52.';
+  var sumFilas=rows.reduce(function(a,r){return a+r.ing;},0);
+  note.innerHTML = sumFilas===ING[2026] ? 'Los ingresos vienen de la lista nominal; el volumen del embudo, de los bloques semanales.'
+    : 'El total incluye '+(ING[2026]-sumFilas)+' ingreso(s) de Team, que no tiene embudo propio cargado. Por eso las filas suman '+sumFilas+' y el total marca '+ING[2026]+'.';
   t.parentNode.parentNode.appendChild(note);
 })();
 
