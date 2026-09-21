@@ -164,6 +164,15 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
 .callout{border-left:3px solid var(--accent);background:var(--surface-2);padding:12px 16px;
   border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-2);margin-top:16px}
 .callout b{color:var(--ink)}
+.estado{margin-top:8px;font-size:11.5px;display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.estado::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.estado.vivo::before{background:var(--good)}
+.estado.copia::before{background:var(--warn)}
+.banner{margin-top:20px;border:1px solid var(--warn);border-left-width:3px;border-radius:0 8px 8px 0;
+  background:var(--surface);padding:14px 18px;font-size:13.5px;color:var(--ink-2)}
+.banner b{color:var(--ink);display:block;margin-bottom:4px;font-size:14px}
+.banner ul{margin:8px 0 0;padding-left:18px}
+.banner li{margin-bottom:3px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -177,16 +186,19 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
   </div>
   <div class="meta">
     <div>Fuente: <b>Data Reclutamiento para Brokers</b></div>
-    <div>Sheet actualizado <b id="upd">18-09-2026</b></div>
-    <div>Dashboard generado <b id="gen">19-09-2026</b></div>
+    <div>Sheet actualizado <b id="upd">—</b></div>
+    <div>Datos leídos <b id="gen">—</b></div>
+    <div id="estado" class="estado">Cargando datos…</div>
     <button class="themebtn" id="theme" type="button">Tema: auto</button>
   </div>
 </header>
 
+<div id="banner" class="banner" hidden></div>
+
 <section id="resumen">
   <p class="eyebrow">Año en curso</p>
   <h2>2026 a la fecha</h2>
-  <p class="lede">Nueve meses cerrados de captación. El año corre <b>por encima de 2025</b> en ritmo mensual, pero todavía lejos de 2024.</p>
+  <p class="lede"><span id="n-meses">Nueve</span> meses cerrados de captación. El año corre <b>por encima de 2025</b> en ritmo mensual, pero todavía lejos de 2024.</p>
   <div class="kpis" id="kpis"></div>
   <div class="callout" id="callout"></div>
 </section>
@@ -240,7 +252,7 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
   <div class="grid-13">
     <div class="panel">
       <h3>Ingresos por fuente, 2026</h3>
-      <p class="ph">52 agentes, enero a septiembre</p>
+      <p class="ph" id="ph-fuente26">52 agentes</p>
       <div class="chart" id="c-fuente26"></div>
     </div>
     <div class="panel">
@@ -298,7 +310,7 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
 <section id="semanal">
   <p class="eyebrow">Actividad</p>
   <h2>El pulso semanal de 2026</h2>
-  <p class="lede">36 semanas cargadas. Las visitas a los avisos se mantienen planas; las primeras entrevistas suben hasta junio y caen en agosto.</p>
+  <p class="lede"><span id="n-semanas">36</span> semanas cargadas. Las visitas a los avisos se mantienen planas; las primeras entrevistas suben hasta junio y caen en agosto.</p>
   <div class="grid-13">
     <div class="panel">
       <h3>Visitas a avisos por semana</h3>
@@ -315,7 +327,7 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
 
 <section id="lista">
   <p class="eyebrow">Detalle</p>
-  <h2>Los 52 ingresos de 2026</h2>
+  <h2 id="h-lista">Los 52 ingresos de 2026</h2>
   <p class="lede">Lista nominal por mes tal como está cargada en el Sheet. Filtra por fuente.</p>
   <div class="panel">
     <div class="filters" id="f-fuente"></div>
@@ -410,7 +422,8 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
      6,
      6
     ]
-   }
+   },
+   "meses": 12
   },
   "2025": {
    "ingresos": 57,
@@ -486,7 +499,8 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
      3,
      3
     ]
-   }
+   },
+   "meses": 12
   },
   "2026": {
    "ingresos": 52,
@@ -561,7 +575,8 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
      3,
      4
     ]
-   }
+   },
+   "meses": 9
   }
  },
  "semanas26": [
@@ -1705,18 +1720,36 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
   ],
   "trabajando_2026": "52 avisos destacados por 32 UF"
  },
- "notas": [
-  "Los ingresos de 2026 se cuentan desde las listas nominales por mes (52), que cuadran con el Consolidado del propio Sheet. La suma de la columna Ingresos del embudo semanal da 49: hay 3 ingresos (abril, julio y agosto) registrados en la lista nominal pero no marcados en el embudo de la semana.",
-  "Semana del 23 al 29 de mayo 2026: Laborum marca \"No se publicó\" en visitas; se computa como 0.",
-  "El embudo semanal de 2026 llega hasta el 11 de septiembre; las entrevistas diarias llegan hasta el 18 de septiembre.",
-  "Ex RE/MAX se suma dentro de Marca en 2025 y 2026, igual que en los consolidados del Sheet. En 2024 aparece como categoría propia (\"Otro Remax\", 6).",
-  "2025 usa una etapa extra (Agendados) entre enero y agosto que no existe en 2026; no se grafica para mantener las etapas comparables."
- ]
+ "actualizado": "18-09-2026",
+ "chequeos": [
+  {
+   "nombre": "2026 · embudo semanal vs lista nominal",
+   "obtenido": 49,
+   "esperado": 52,
+   "ok": false,
+   "aviso": true,
+   "detalle": "Diferencia conocida: hay ingresos en la lista nominal que no quedaron marcados en la columna Ingresos de su semana. Manda la lista nominal."
+  }
+ ],
+ "chequeos_ok": true,
+ "celdas_no_numericas": [
+  "MAYO · 23 al 29 · Laborum · visitas: \"No se publicó\""
+ ],
+ "generado": "19-09-2026 16:20"
 }</script>
 <script>
 (function(){
 "use strict";
-var D = JSON.parse(document.getElementById('payload').textContent);
+/* ─────────────────────────────────────────────────────────────
+   Pega acá la URL del Apps Script (termina en /exec).
+   Mientras esté vacía, la página muestra la copia guardada abajo.
+   ───────────────────────────────────────────────────────────── */
+var ENDPOINT = 'https://script.google.com/macros/s/AKfycbx6fuvF2SsPLc_OrAwttZe6TYohiuruRTuGHIuuShhxTlQtsVbCwcH1E05Mwl8I4mxgwQ/exec';
+
+var SNAPSHOT = JSON.parse(document.getElementById('payload').textContent);
+var D = SNAPSHOT;
+var CLEANUP = [];
+var NOTAS_BASE = ["El embudo semanal de 2026 llega hasta el 11 de septiembre; las entrevistas diarias llegan hasta el 18 de septiembre.", "Ex RE/MAX se suma dentro de Marca en 2025 y 2026, igual que en los consolidados del Sheet. En 2024 aparece como categoría propia (\"Otro Remax\", 6).", "2025 usa una etapa extra (Agendados) entre enero y agosto que no existe en 2026; no se grafica para mantener las etapas comparables."];
 var MS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 var STEPS = ['Visitas','Postulantes','Perfilados','1ª entrevista','2ª entrevista','Ingresos'];
 var css = function(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
@@ -1727,7 +1760,21 @@ var clp = function(n){ return '$'+Math.round(n).toLocaleString('es-CL'); };
 var SVGNS='http://www.w3.org/2000/svg';
 function el(t,a){var e=document.createElementNS(SVGNS,t);for(var k in a){if(a[k]!==undefined&&a[k]!==null)e.setAttribute(k,a[k]);}return e;}
 
-/* ============ derived ============ */
+/* ============ render ============ */
+function renderAll(){
+for(var ci=0;ci<CLEANUP.length;ci++){
+  try{ if(CLEANUP[ci].ro) CLEANUP[ci].ro.disconnect();
+       window.removeEventListener('theme-change', CLEANUP[ci].onTheme); }catch(e){}
+}
+CLEANUP=[];
+['kpis','callout','c-mensual','t-anual','c-efic','funnel26','t-embudo','c-conv','c-fuente26',
+ 'c-mix','t-fuentes','c-cac','t-inv','c-entmes','c-entdia','t-ent','c-wv','c-we','f-fuente',
+ 't-lista','notelist'].forEach(function(id){
+  var n=document.getElementById(id); if(n) n.innerHTML='';
+});
+var nota=document.querySelectorAll('.autonota');
+for(var ni=0;ni<nota.length;ni++) nota[ni].parentNode.removeChild(nota[ni]);
+
 var A = D.anios, Y=['2024','2025','2026'];
 var SRC_ORDER = ['RRSS','Laborum','Referidos','Trabajando','Marca','Team'];
 var SRC_LABEL = {RRSS:'RRSS',Laborum:'Laborum',Referidos:'Referidos',Trabajando:'Trabajando',Marca:'Marca / Ex RE/MAX',Team:'Team'};
@@ -1738,14 +1785,14 @@ Y.forEach(function(y){
   tot[y]=t;
 });
 var ING = {2024:89,2025:57,2026:52};
-var MESES26 = 9;
+var MESES26 = (A['2026'].meses || 9);
 var prom26 = ING[2026]/MESES26;
 var proy26 = Math.round(ING[2026] + prom26*3);
 
 /* ============ KPI ============ */
 (function(){
   var k = [
-    {k:'Ingresos 2026',v:fmt(ING[2026]),n:'enero a septiembre',hero:true},
+    {k:'Ingresos 2026',v:fmt(ING[2026]),n:'enero a '+MS[Math.max(0,MESES26-1)].toLowerCase(),hero:true},
     {k:'Promedio mensual',v:dec(prom26),n:'2025 cerró en '+dec(57/12)+' · 2024 en '+dec(89/12)},
     {k:'Proyección 2026',v:'≈ '+fmt(proy26),n:'si el ritmo se mantiene · <span class="up">+'+Math.round((proy26/57-1)*100)+'% vs 2025</span>'},
     {k:'Visitas a avisos',v:fmt(tot['2026'][0]),n:'todas las fuentes, 36 semanas'},
@@ -1764,6 +1811,19 @@ var proy26 = Math.round(ING[2026] + prom26*3);
     ' visitas. Laborum y Trabajando, con '+fmt(vPag)+' visitas entre los dos, aportaron '+pagados+'.';
 })();
 
+/* ============ textos que dependen de los datos ============ */
+(function(){
+  var MESNOM=['un','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce'];
+  var ult=MS[Math.max(0,MESES26-1)], mesesTxt=MESNOM[Math.max(0,MESES26-1)]||MESES26;
+  function set(id,txt){ var n=document.getElementById(id); if(n) n.textContent=txt; }
+  set('upd', D.actualizado||'—');
+  set('gen', D.generado||'—');
+  set('h-lista','Los '+ING[2026]+' ingresos de 2026');
+  set('ph-fuente26', ING[2026]+' agentes, enero a '+ult.toLowerCase());
+  set('n-semanas', D.semanas26.length);
+  set('n-meses', mesesTxt.charAt(0).toUpperCase()+mesesTxt.slice(1));
+})();
+
 /* ============ chart engine ============ */
 function mkChart(host, render){
   var wrap=document.createElement('div'); wrap.className='chart-inner';
@@ -1775,11 +1835,14 @@ function mkChart(host, render){
     render(wrap, w, tip, host);
   }
   draw();
+  var ro=null;
   if(window.ResizeObserver){
     var t=null;
-    new ResizeObserver(function(){ clearTimeout(t); t=setTimeout(draw,120); }).observe(host);
+    ro=new ResizeObserver(function(){ clearTimeout(t); t=setTimeout(draw,120); });
+    ro.observe(host);
   }
   window.addEventListener('theme-change', draw);
+  CLEANUP.push({ro:ro,onTheme:draw});
 }
 function legend(host, items){
   var ul=document.createElement('ul'); ul.className='legend';
@@ -2025,7 +2088,7 @@ function stack100(hostId, opts){
 /* ============ tabla anual ============ */
 (function(){
   var t=document.getElementById('t-anual');
-  var meses={2024:12,2025:12,2026:9};
+  var meses={2024:A['2024'].meses||12,2025:A['2025'].meses||12,2026:MESES26};
   t.innerHTML='<thead><tr><th>Año</th><th>Ingresos</th><th>Meses</th><th>Prom./mes</th><th>Visitas</th></tr></thead><tbody>'+
     Y.map(function(y){
       return '<tr><td>'+y+(y==='2026'?' <span style="color:var(--muted);font-weight:400">parcial</span>':'')+'</td><td>'+ING[y]+'</td><td>'+meses[y]+'</td><td>'+
@@ -2101,7 +2164,7 @@ function stack100(hostId, opts){
     aria:'Conversión entre etapas del embudo por año'
   });
   var note=document.createElement('p');
-  note.style.cssText='font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.5';
+  note.className='autonota'; note.style.cssText='font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.5';
   note.innerHTML='V = visitas · P = postulantes · Pf = perfilados · E1 = primera entrevista · E2 = segunda entrevista.';
   document.getElementById('c-conv').appendChild(note);
 })();
@@ -2131,7 +2194,7 @@ function stack100(hostId, opts){
     aria:'Participación de cada fuente en los ingresos, por año'
   });
   var note=document.createElement('p');
-  note.style.cssText='font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5';
+  note.className='autonota'; note.style.cssText='font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5';
   note.innerHTML='Ex RE/MAX y Team se suman dentro de Marca, igual que en los consolidados del Sheet.';
   document.getElementById('c-mix').appendChild(note);
 })();
@@ -2157,7 +2220,7 @@ function stack100(hostId, opts){
     '</tbody><tfoot><tr><td>Total</td><td>'+fmt(tot['2026'][0])+'</td><td>'+fmt(tot['2026'][1])+'</td><td>'+fmt(tot['2026'][3])+'</td><td>52</td><td>'+
       dec(52/tot['2026'][3]*100)+'</td></tr></tfoot>';
   var note=document.createElement('p');
-  note.style.cssText='font-size:11.5px;color:var(--muted);margin:12px 0 0;line-height:1.55';
+  note.className='autonota'; note.style.cssText='font-size:11.5px;color:var(--muted);margin:12px 0 0;line-height:1.55';
   note.innerHTML='El total de ingresos incluye 1 de Team, que no tiene embudo propio cargado. Por eso las filas suman 51 y el total marca 52.';
   t.parentNode.parentNode.appendChild(note);
 })();
@@ -2176,7 +2239,7 @@ function stack100(hostId, opts){
     aria:'Costo por agente ingresado, por canal y año'
   });
   var note=document.createElement('p');
-  note.style.cssText='font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.55';
+  note.className='autonota'; note.style.cssText='font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.55';
   note.innerHTML='Meta Ads 2026 acumula hasta el 14 de agosto, contra ingresos de nueve meses: el costo real del año será algo mayor.';
   document.getElementById('c-cac').appendChild(note);
 
@@ -2278,10 +2341,69 @@ function stack100(hostId, opts){
 
 /* ============ notas ============ */
 (function(){
-  document.getElementById('notelist').innerHTML = D.notas.map(function(n){
-    return '<li>'+n+'</li>';
+  var n = NOTAS_BASE.slice();
+  var av = (D.chequeos||[]).filter(function(c){return c.aviso && !c.ok;});
+  av.forEach(function(c){
+    n.unshift('<strong>'+c.nombre+'</strong>: el embudo suma '+c.obtenido+' y la lista nominal '+
+      c.esperado+'. '+c.detalle);
+  });
+  (D.celdas_no_numericas||[]).forEach(function(f){
+    n.push('Celda con texto donde se espera un número: '+f+'. Se computa como 0.');
+  });
+  document.getElementById('notelist').innerHTML = n.map(function(x){
+    return '<li>'+x+'</li>';
   }).join('');
 })();
+
+}
+
+/* ============ arranque y datos en vivo ============ */
+function sello(txt, clase){
+  var e=document.getElementById('estado');
+  e.textContent=txt; e.className='estado '+(clase||'');
+}
+function banner(d){
+  var b=document.getElementById('banner');
+  var malos=(d.chequeos||[]).filter(function(c){return !c.ok && !c.aviso;});
+  if(!malos.length){ b.hidden=true; return; }
+  b.hidden=false;
+  b.innerHTML='<b>Ojo: los datos del Sheet no cuadran</b>'+
+    'Las cifras de abajo pueden estar equivocadas. Esto suele pasar cuando se movió un bloque '+
+    'o se agregó una columna en la planilla.<ul>'+
+    malos.map(function(c){
+      return '<li>'+c.nombre+': el dashboard calculó <b style="display:inline">'+c.obtenido+
+        '</b> y el Sheet dice <b style="display:inline">'+c.esperado+'</b>. '+c.detalle+'</li>';
+    }).join('')+'</ul>';
+}
+function aplicar(datos, vivo){
+  D=datos; renderAll(); banner(D);
+  if(vivo) sello('Datos en vivo · Sheet al '+(D.actualizado||'—'), 'vivo');
+  else sello('Copia guardada del '+(D.actualizado||'—'), 'copia');
+}
+function traer(){
+  if(!ENDPOINT){ aplicar(SNAPSHOT,false); return; }
+  var listo=false;
+  var t=setTimeout(function(){ if(!listo) jsonp(); }, 6000);
+  fetch(ENDPOINT,{redirect:'follow'})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ listo=true; clearTimeout(t); if(j&&j.anios) aplicar(j,true); else jsonp(); })
+    .catch(function(){ if(!listo) jsonp(); });
+
+  function jsonp(){
+    if(listo) return;
+    var cb='__recl'+Date.now();
+    window[cb]=function(j){
+      listo=true; clearTimeout(t);
+      if(j&&j.anios) aplicar(j,true); else aplicar(SNAPSHOT,false);
+      try{ delete window[cb]; }catch(e){ window[cb]=undefined; }
+    };
+    var sc=document.createElement('script');
+    sc.src=ENDPOINT+(ENDPOINT.indexOf('?')<0?'?':'&')+'callback='+cb;
+    sc.onerror=function(){ if(!listo) aplicar(SNAPSHOT,false); };
+    document.body.appendChild(sc);
+    setTimeout(function(){ if(!listo) aplicar(SNAPSHOT,false); }, 12000);
+  }
+}
 
 /* ============ theme toggle ============ */
 (function(){
@@ -2296,11 +2418,16 @@ function stack100(hostId, opts){
     window.dispatchEvent(new Event('theme-change'));
   }
   btn.addEventListener('click',function(){ i=(i+1)%modes.length; apply(); });
-  apply();
+  var m0=modes[i];
+  if(m0==='auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme',m0);
+  btn.textContent='Tema: '+m0;
   if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){
     if(modes[i]==='auto') window.dispatchEvent(new Event('theme-change'));
   });
 })();
+
+traer();
 
 })();
 </script>
