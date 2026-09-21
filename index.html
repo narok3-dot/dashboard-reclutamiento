@@ -189,6 +189,7 @@ tfoot td:first-child{font-family:"IBM Plex Sans",sans-serif}
     <div>Sheet actualizado <b id="upd">—</b></div>
     <div>Datos leídos <b id="gen">—</b></div>
     <div id="estado" class="estado">Cargando datos…</div>
+    <button class="themebtn" id="refrescar" type="button">Actualizar datos</button>
     <button class="themebtn" id="theme" type="button">Tema: auto</button>
   </div>
 </header>
@@ -2383,11 +2384,16 @@ function aplicar(datos, vivo){
   if(vivo) sello('Datos en vivo · Sheet al '+(D.actualizado||'—'), 'vivo');
   else sello('Copia guardada del '+(D.actualizado||'—'), 'copia');
 }
+function urlDatos(){
+  // fresh=1 salta el caché del script; t=… evita el caché del navegador
+  return ENDPOINT + (ENDPOINT.indexOf('?')<0?'?':'&') + 'fresh=1&t=' + Date.now();
+}
 function traer(){
   if(!ENDPOINT){ aplicar(SNAPSHOT,false); return; }
+  var URLD = urlDatos();
   var listo=false;
   var t=setTimeout(function(){ if(!listo) jsonp(); }, 6000);
-  fetch(ENDPOINT,{redirect:'follow'})
+  fetch(URLD,{redirect:'follow',cache:'no-store'})
     .then(function(r){ return r.json(); })
     .then(function(j){ listo=true; clearTimeout(t); if(j&&j.anios) aplicar(j,true); else jsonp(); })
     .catch(function(){ if(!listo) jsonp(); });
@@ -2401,7 +2407,7 @@ function traer(){
       try{ delete window[cb]; }catch(e){ window[cb]=undefined; }
     };
     var sc=document.createElement('script');
-    sc.src=ENDPOINT+(ENDPOINT.indexOf('?')<0?'?':'&')+'callback='+cb;
+    sc.src=URLD+'&callback='+cb;
     sc.onerror=function(){ if(!listo) aplicar(SNAPSHOT,false); };
     document.body.appendChild(sc);
     setTimeout(function(){ if(!listo) aplicar(SNAPSHOT,false); }, 12000);
@@ -2427,6 +2433,16 @@ function traer(){
   btn.textContent='Tema: '+m0;
   if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){
     if(modes[i]==='auto') window.dispatchEvent(new Event('theme-change'));
+  });
+})();
+
+(function(){
+  var b=document.getElementById('refrescar');
+  b.addEventListener('click',function(){
+    b.disabled=true; b.textContent='Leyendo…';
+    sello('Releyendo el Sheet…','');
+    traer();
+    setTimeout(function(){ b.disabled=false; b.textContent='Actualizar datos'; },2500);
   });
 })();
 
